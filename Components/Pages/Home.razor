@@ -1,0 +1,298 @@
+﻿@page "/"
+
+@using Microsoft.AspNetCore.Components.Web
+
+@inject IJSRuntime JS
+
+<PageTitle>Fototeca</PageTitle>
+
+<!-- Mapa -->
+<div id="map" style="height: 768px; width: 100%;"></div>
+
+<!-- Botón para abrir el panel -->
+<button class="btn btn-primary position-fixed start-0 m-3" type="button"
+        style="top: 50px;"
+        @onclick="ToggleSidePanel">
+    <img src="images/search-results_16262362.png" alt="Fotogramas" style="width: 30px; height: auto;">
+</button>
+
+<!-- Panel lateral -->
+<div class="offcanvas offcanvas-start @(showSidePanel ? "show" : "")"
+     tabindex="-1" id="sidePanel" aria-labelledby="sidePanelLabel"
+     style="visibility:@(showSidePanel ? "visible" : "hidden"); background-color: white; transition: transform 0.3s ease-in-out;">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="sidePanelLabel">Fotogramas mostrados</h5>
+        <button type="button" class="btn-close" aria-label="Close" @onclick="CloseSidePanel"></button>
+    </div>
+    <div class="offcanvas-body">
+        <ul class="list-group">
+            <li class="list-group-item">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <input class="form-check-input" type="checkbox" id="selectAllCheckbox" @onchange="ToggleSelectAll" />
+                    </div>
+                    <div class="col">
+                        <span>Fotogramas</span>
+                    </div>
+                    <div class="col">
+                        <span>Acciones</span>
+                    </div>
+                </div>
+            </li>
+            @foreach (var fotograma in fotogramas)
+            {
+                <li class="list-group-item">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <input class="form-check-input" type="checkbox" @bind="fotograma.Seleccionado" />
+                        </div>
+                        <div class="col">
+                            @fotograma.Location
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn btn-sm btn-outline-secondary me-1" @onclick="() => ToggleVisibility(fotograma)">@(fotograma.Visible ? "🚫" : "👁️")</button>
+                            <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => ZoomToImage(fotograma)">🔍</button>
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteFotograma(fotograma)">🗑️</button>
+                        </div>
+                    </div>
+                </li>
+            }
+        </ul>
+    </div>
+    <button class="btn btn-success m-3" @onclick="DescargarFotogramas">Descargar</button>
+</div>
+
+<!-- Mini panel con los vuelos disponibles de X año -->
+@if (añoSeleccionado.HasValue && vuelosDelAñoActual?.Any() == true)
+{
+    <div class="panel-vuelos bg-white shadow border rounded p-2 mt-2">
+        <h6>Vuelos disponibles en @añoSeleccionado</h6>
+        <ul class="list-group">
+            @foreach (var vuelo in vuelosDelAñoActual!)
+            {
+                <li class="list-group-item list-group-item-action vuelo"
+                    @onclick="() => SeleccionarVuelo(vuelo)">
+                    @vuelo.Nombre
+                </li>
+            }
+        </ul>
+    </div>
+}
+
+<!-- Botones con los años de vuelos disponibles -->
+<div class="slider-anios d-flex justify-content-center flex-wrap p-2 bg-light">
+    @foreach (var año in vuelosPorAnio.Keys.OrderBy(x => x))
+    {
+        <button class="btn btn-outline-primary m-1"
+                @onclick="() => MostrarVuelosDelAño(año)">
+            @año
+        </button>
+    }
+</div>
+
+@code {
+
+    private bool showSidePanel = false;
+
+    List<Vuelo>? vuelosDelAñoActual;
+    int? añoSeleccionado;
+
+    private string nombre_vuelo = string.Empty;
+
+    void MostrarVuelosDelAño(int año)
+    {
+        añoSeleccionado = año;
+        vuelosDelAñoActual = vuelosPorAnio[año];
+    }
+
+    public async Task SeleccionarVuelo(Vuelo vuelo)
+    {
+        vuelosDelAñoActual = null;
+        añoSeleccionado = null;
+        Console.WriteLine($"Vuelo seleccionado: {vuelo.Nombre}");
+
+        nombre_vuelo = vuelo.Nombre;
+
+        fotogramas = new List<Fotograma>();
+
+        //  Aqui lo suyo ahora (TENIENDO EN CUENTA QUE DE FORMA DEFAULT NO ENSEÑE NINGUN VUELO, EN EL SENTIDO DE QUE NO HAYA CENTROIDES NI POLIGONOS) seria mandar desde aqui el nombre del vuelo para que en el js
+        //  cambie su layer de centroides, poligonos y mosaico, para asi mostrar el vuelo correspondiente
+        await JS.InvokeVoidAsync("MapaInterop.ClickVueloSeleccionado", vuelo.Nombre);
+    }
+
+    Dictionary<int, List<Vuelo>> vuelosPorAnio = new()
+    {
+        { 1956, new List<Vuelo> { new Vuelo { Id="V1", Any=1956, Nombre="Vuelo Mallorca 1956", Capa_centroides="...", Capa_poligonos="...", Capa_mosaico="..." } } },
+        { 2012, new List<Vuelo> 
+            { 
+                new Vuelo 
+                { 
+                    Id="V2", 
+                    Any=2012, 
+                    Nombre="2012_F_E001M_Carret_Llucm-Campos", 
+                    Capa_centroides="...", 
+                    Capa_poligonos="...", 
+                    Capa_mosaico="..." 
+                }, new Vuelo 
+                { 
+                    Id="V3", 
+                    Any=2012, 
+                    Nombre="2012_F_E001M", 
+                    Capa_centroides="...", 
+                    Capa_poligonos="...", 
+                    Capa_mosaico="..." 
+                } 
+            } 
+        }
+    };
+
+
+    private void ToggleSidePanel()
+    {
+        showSidePanel = !showSidePanel;
+    }
+
+    private void CloseSidePanel()
+    {
+        showSidePanel = false;
+    }
+
+    private DotNetObjectReference<Home>? objRef;
+    // private List<FotogramaItem> Fotogramas => MapService.Instance.Fotogramas;
+
+    public List<Fotograma> fotogramas = new List<Fotograma>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            objRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("mapApp.initMap", "map", objRef);
+        }
+    }
+
+    /*protected override void OnInitialized()
+    {
+        MapService.Instance.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        MapService.Instance.OnChange -= StateHasChanged;
+        objRef?.Dispose();
+    }*/
+
+    [JSInvokable("Click")]
+    public Task Click(string location, int id)
+    {
+        //Console.WriteLine("Evento click llegado al blazor");
+        //Console.WriteLine($"ID click: {id}");
+        //Console.WriteLine($"Location click: {location}");
+
+
+        if (!fotogramas.Any(img => img.Id == id))
+        {
+            fotogramas.Add(new Fotograma
+            {
+                Location = location,
+                Id = id
+            });
+            StateHasChanged();  // Para que Blazor refresque la UI
+        }
+        //Console.WriteLine($"Num de imagenes: {fotogramas.Count()}");
+        return Task.CompletedTask;
+    }
+
+    //  Cuidado no borrar, corresponde al .js por si acaso se utiliza
+/*
+    [JSInvokable("HoverCentroide")]
+    public Task HoverCentroide(string location, int id)
+    {
+        //Console.WriteLine("Evento hover llegado al blazor");
+        //Console.WriteLine($"ID hover: {id}");
+        //Console.WriteLine($"Location hover: {location}");
+
+
+        /*if (!imagenes.Any(img => img.Id == id))
+        {
+            imagenes.Add(new Imagen
+            {
+                Location = location,
+                Id = id
+            });
+            StateHasChanged();  // Para que Blazor refresque la UI
+        }
+        //Console.WriteLine($"Num de imagenes: {imagenes.Count()}");
+        return Task.CompletedTask;
+    }
+*/
+    private async Task ToggleVisibility(Fotograma fotograma)
+    {
+        fotograma.Visible = !fotograma.Visible;
+        // Puedes llamar a JS: JS.InvokeVoidAsync("mapApp.toggleVisibility", fotograma.Nombre);
+        Console.WriteLine($"Toggle {fotograma.Location}");
+
+        await JS.InvokeVoidAsync("MapaInterop.toggleLayerVisibility", fotograma.Location);
+    }
+
+    private async Task ZoomToImage(Fotograma fotograma)
+    {
+        // Puedes llamar a JS: JS.InvokeVoidAsync("mapApp.zoomTo", fotograma.Nombre);
+        //Console.WriteLine($"Zoom to {fotograma.Location}");
+
+        await JS.InvokeVoidAsync("MapaInterop.ZoomToImage", fotograma.Id);
+    }
+
+    private async Task DeleteFotograma(Fotograma fotograma)
+    {
+        // MapService.Instance.DeleteFotograma(fotograma);
+        //Console.WriteLine($"Delete {fotograma.Location}");
+
+        fotogramas.Remove(fotograma);
+
+        await JS.InvokeVoidAsync("MapaInterop.DeleteFotograma", fotograma.Location, fotograma.Id);
+    }
+
+    private void ToggleSelectAll(ChangeEventArgs e)
+    {
+        bool isChecked = e.Value as bool? ?? false;
+        foreach(var f in fotogramas)
+        {
+            f.Seleccionado = isChecked;
+        }
+    }
+
+    private async Task DescargarFotogramas()
+    {
+        List<String> locations = fotogramas
+            .Where(f => f.Seleccionado)
+            .Select(f => f.Location)
+            .ToList();
+
+        if (locations.Count == 0)
+        {
+            Console.WriteLine("No hay fotogramas seleccionados.");
+            return;
+        }
+
+        await JS.InvokeVoidAsync("MapaInterop.DescargarFotogramas", locations, nombre_vuelo);
+    }
+
+    public class Fotograma
+    {
+        public string Location { get; set; } = string.Empty;
+        public int Id { get;set; }
+        public bool Visible {get; set;} = false;
+        public bool Seleccionado {get; set;} =  false;
+    }
+
+        public class Vuelo
+    {
+        public required string Id { get; set; }
+        public required string Nombre { get; set; }
+        public required int Any { get; set; }
+        public required string Capa_centroides { get; set; }
+        public required string Capa_poligonos { get; set; }
+        public required string Capa_mosaico { get; set; }
+    }
+}

@@ -1,0 +1,52 @@
+/*.slider-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding: 10px;
+    overflow-x: auto;
+    white-space: nowrap;
+    background-color: #f0f0f0;
+}
+
+.slider-year {
+    margin: 0 10px;
+    padding: 8px 14px;
+    background: #ddd;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.slider-year:hover {
+    background-color: #bbb;
+}
+
+.popover-vuelos {
+    position: absolute;
+    background: white;
+    border: 1px solid gray;
+    padding: 5px;
+    margin-top: 250px !important;
+    z-index: 1000;
+}
+.vuelo-item {
+    padding: 5px;
+    cursor: pointer;
+}
+.vuelo-item:hover {
+    background-color: #eee;
+}*/
+
+.slider-anios button {
+    min-width: 70px;
+    font-weight: bold;
+}
+
+.panel-vuelos {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.vuelo {
+    cursor: pointer;
+}
