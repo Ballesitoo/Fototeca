@@ -5,6 +5,22 @@
       "PackagePath": "staticwebassets/LaFototeca.bundle.scp.css"
     },
     {
+      "Id": "/var/www/html/fototeca/LaFototeca/wwwroot/Scripts/campos_centroides_antes.py",
+      "PackagePath": "staticwebassets/Scripts/campos_centroides_antes.py"
+    },
+    {
+      "Id": "/var/www/html/fototeca/LaFototeca/wwwroot/Scripts/campos_location_id_centroides_shp.py",
+      "PackagePath": "staticwebassets/Scripts/campos_location_id_centroides_shp.py"
+    },
+    {
+      "Id": "/var/www/html/fototeca/LaFototeca/wwwroot/Scripts/crear_poligonos_antes.py",
+      "PackagePath": "staticwebassets/Scripts/crear_poligonos_antes.py"
+    },
+    {
+      "Id": "/var/www/html/fototeca/LaFototeca/wwwroot/Scripts/crear_poligonos_desde_centroides_shp.py",
+      "PackagePath": "staticwebassets/Scripts/crear_poligonos_desde_centroides_shp.py"
+    },
+    {
       "Id": "/var/www/html/fototeca/LaFototeca/wwwroot/app.css",
       "PackagePath": "staticwebassets/app.css"
     },
@@ -43,10 +59,6 @@
     {
       "Id": "/var/www/html/fototeca/LaFototeca/wwwroot/js/mapa_antes_multiples_vuelos.js",
       "PackagePath": "staticwebassets/js/mapa_antes_multiples_vuelos.js"
-    },
-    {
-      "Id": "/var/www/html/fototeca/LaFototeca/wwwroot/js/mapa_todo_menos_hover_y_mosaico.js",
-      "PackagePath": "staticwebassets/js/mapa_todo_menos_hover_y_mosaico.js"
     },
     {
       "Id": "/var/www/html/fototeca/LaFototeca/wwwroot/js/ol.js",

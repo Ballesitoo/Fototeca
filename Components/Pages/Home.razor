@@ -46,8 +46,8 @@
                         <div class="col">
                             <input class="form-check-input" type="checkbox" @bind="fotograma.Seleccionado" />
                         </div>
-                        <div class="col">
-                            @fotograma.Location
+                        <div class="col-auto">
+                            @fotograma.Location.Replace(".jpg", "")
                         </div>
                         <div class="col-auto">
                             <button class="btn btn-sm btn-outline-secondary me-1" @onclick="() => ToggleVisibility(fotograma)">@(fotograma.Visible ? "🚫" : "👁️")</button>
@@ -122,12 +122,24 @@
 
     Dictionary<int, List<Vuelo>> vuelosPorAnio = new()
     {
-        { 1956, new List<Vuelo> { new Vuelo { Id="V1", Any=1956, Nombre="Vuelo Mallorca 1956", Capa_centroides="...", Capa_poligonos="...", Capa_mosaico="..." } } },
-        { 2012, new List<Vuelo> 
+        { 1984, new List<Vuelo> 
             { 
                 new Vuelo 
                 { 
                     Id="V2", 
+                    Any=1984, 
+                    Nombre="1984_F_E005M", 
+                    Capa_centroides="...", 
+                    Capa_poligonos="...", 
+                    Capa_mosaico="..." 
+                } 
+            } 
+        },
+        { 2012, new List<Vuelo> 
+            { 
+                new Vuelo 
+                { 
+                    Id="V3", 
                     Any=2012, 
                     Nombre="2012_F_E001M_Carret_Llucm-Campos", 
                     Capa_centroides="...", 
@@ -135,7 +147,7 @@
                     Capa_mosaico="..." 
                 }, new Vuelo 
                 { 
-                    Id="V3", 
+                    Id="V4", 
                     Any=2012, 
                     Nombre="2012_F_E001M", 
                     Capa_centroides="...", 

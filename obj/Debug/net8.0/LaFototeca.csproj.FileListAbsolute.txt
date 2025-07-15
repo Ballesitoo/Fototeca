@@ -27,3 +27,4 @@
 /var/www/html/fototeca/LaFototeca/obj/Debug/net8.0/LaFototeca.pdb
 /var/www/html/fototeca/LaFototeca/obj/Debug/net8.0/LaFototeca.genruntimeconfig.cache
 /var/www/html/fototeca/LaFototeca/obj/Debug/net8.0/ref/LaFototeca.dll
+/var/www/html/fototeca/LaFototeca/obj/Debug/net8.0/LaFototeca.sourcelink.json
