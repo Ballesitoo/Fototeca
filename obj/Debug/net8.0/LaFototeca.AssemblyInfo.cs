@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("LaFototeca")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+702511a06f9dd08f6eba054c510ccea8980e56dd")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d2a15891e5c12554a197f4ee3387610e4eebc900")]
 [assembly: System.Reflection.AssemblyProductAttribute("LaFototeca")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LaFototeca")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

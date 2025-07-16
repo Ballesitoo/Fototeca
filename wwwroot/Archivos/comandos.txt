@@ -1,0 +1,61 @@
+Iniciar geoserver
+    ir a /home/ubuntu_admin/Documents/geoserver
+    Y poner ./bin/startup.sh
+    Ir a http://localhost:8081/geoserver/web/?6
+
+Descarga de ckan con solr
+    https://docs.ckan.org/en/latest/maintaining/installing/install-from-package.html
+
+Configurar el .ini de ckan
+    sudo nano /etc/ckan/default/ckan.ini
+
+Iniciar el ckan batabase
+    sudo ckan db init
+
+Para cambiar el estado del servicio de solr y eso
+    sudo service solr restart
+    sudo service solr start
+    sudo service solr status
+
+Cambiar el estado del servicio de Nginx
+    sudo service nginx start
+    sudo service nginx restart
+    sudo service nginx status
+    sudo nginx -t
+
+Sites-available de ckan
+    sudo nano /etc/nginx/sites-available/ckan
+
+location = 'P3_0978_Hi-RGB.jpg'
+
+Para abrir Visual en root
+sudo code --no-sandbox --user-data-dir /
+
+Montar disco de Compartir de Lukla en maquina linux
+sudo mount.cifs //192.168.1.122/Compartir /home/ubuntu_admin/Documents/Compartido/ -o user=dballester,vers=3.0
+Si tienes problemas con que no esta actualizada la carpeta pon esto
+mount | grep Compartido
+Si sale algo pon esto
+sudo umount /home/ubuntu_admin/Documents/Compartido/
+Y vuelve a poner el primero y ya esta
+
+Ejecutar pgadmin
+sudo /usr/pgadmin4/bin/setup-web.sh
+pagina de pgadmin http://127.0.0.1/pgadmin4
+user
+dballester@icgib.org
+pass
+Ubuntu25
+
+Para crear la base de datos a partir del archivo
+sudo -u postgres psql -d fototeca -f /var/www/html/fototeca/LaFototeca/wwwroot/Archivos/modelo_datos_fototeca_CNIG.sql
+Crear base de datos
+sudo -u postgres psql
+CREATE DATABASE fototeca;
+Borrar base de datos
+DROP DATABASE fototeca WITH (FORCE);
+DROP USER sl_fototeca;
+DROP USER u_fototeca;
+Si dice algo de privilegios al hacer drop user
+DROP OWNED BY u_fototeca CASCADE;
+sudo service postgresql status

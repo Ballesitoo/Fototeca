@@ -35,8 +35,8 @@ window.mapApp = {
           mapaBaseGOIB
         ],
         view: new ol.View({
-          //center: [491414.43, 4383367.44], // Coordenadas centradas en Mallorca (EPSG:25831)
-          center: [470000, 4355000], // Coordenadas centradas en Mallorca (EPSG:25831)
+          //center: [491414.43, 4383367.44], // Coordenadas centradas en Mallorca (EPSG:25831) zoom 8.5
+          center: [470000, 4360000], // Coordenadas centradas de las Islas Baleares (EPSG:25831)
           zoom: 7.48,
           projection: 'EPSG:25831'
         })
