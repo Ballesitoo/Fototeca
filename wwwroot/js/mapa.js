@@ -236,15 +236,18 @@ window.MapaInterop = {
     }
   },
   // Funcion para descargar los fotogramas en .zip
-  DescargarFotogramas: async function (locations, nombre_vuelo) {
+  DescargarFotogramas: async function (locations, carpetaRelativa) {
 
     //console.log("Descargando")
     const zip = new window.JSZip();
     const fotogramasArray = Array.isArray(locations) ? locations : Array.from(locations);
 
     const promises = fotogramasArray.map(async location => {
-        const jpgUrl = `http://192.168.1.60:8081/fototeca/images/${nombre_vuelo}/${location}`;
-        const jgwUrl = `http://192.168.1.60:8081/fototeca/images/${nombre_vuelo}/${location.replace('.jpg', '.jgw')}`;
+        //const jpgUrl = `http://192.168.1.60:8081/fototeca/images/${nombre_vuelo}/${location}`;
+        //const jgwUrl = `http://192.168.1.60:8081/fototeca/images/${nombre_vuelo}/${location.replace('.jpg', '.jgw')}`;
+
+        const jpgUrl = `${carpetaRelativa}/${location}`;
+        const jgwUrl = `${carpetaRelativa}/${location.replace('.jpg', '.jgw')}`;
         
         try {
             const [imageResponse, jgwResponse] = await Promise.all([

@@ -5,6 +5,18 @@
       "PackagePath": "staticwebassets/LaFototeca.bundle.scp.css"
     },
     {
+      "Id": "/var/www/html/fototeca/LaFototeca/wwwroot/Archivos/comandos.txt",
+      "PackagePath": "staticwebassets/Archivos/comandos.txt"
+    },
+    {
+      "Id": "/var/www/html/fototeca/LaFototeca/wwwroot/Archivos/modelo_datos_fototeca_CNIG.sql",
+      "PackagePath": "staticwebassets/Archivos/modelo_datos_fototeca_CNIG.sql"
+    },
+    {
+      "Id": "/var/www/html/fototeca/LaFototeca/wwwroot/Archivos/sql.txt",
+      "PackagePath": "staticwebassets/Archivos/sql.txt"
+    },
+    {
       "Id": "/var/www/html/fototeca/LaFototeca/wwwroot/Scripts/campos_centroides_antes.py",
       "PackagePath": "staticwebassets/Scripts/campos_centroides_antes.py"
     },

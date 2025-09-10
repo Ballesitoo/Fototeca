@@ -47,6 +47,9 @@ dballester@icgib.org
 pass
 Ubuntu25
 
+Reiniciar postgresql
+sudo service postgresql restart
+
 Para crear la base de datos a partir del archivo
 sudo -u postgres psql -d fototeca -f /var/www/html/fototeca/LaFototeca/wwwroot/Archivos/modelo_datos_fototeca_CNIG.sql
 Crear base de datos
@@ -59,3 +62,8 @@ DROP USER u_fototeca;
 Si dice algo de privilegios al hacer drop user
 DROP OWNED BY u_fototeca CASCADE;
 sudo service postgresql status
+
+
+Crear nuevo proyecto en vscode
+Vas al terminal, creas la carpeta donde estara el proyecto (el nombre que tenga la carpeta es el nombre del proyecto), entras en la carpeta y pones (al menos iniciando vscode con root)
+dotnet new blazor

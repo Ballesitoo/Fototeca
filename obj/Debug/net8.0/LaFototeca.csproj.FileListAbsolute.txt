@@ -28,3 +28,9 @@
 /var/www/html/fototeca/LaFototeca/obj/Debug/net8.0/LaFototeca.genruntimeconfig.cache
 /var/www/html/fototeca/LaFototeca/obj/Debug/net8.0/ref/LaFototeca.dll
 /var/www/html/fototeca/LaFototeca/obj/Debug/net8.0/LaFototeca.sourcelink.json
+/var/www/html/fototeca/LaFototeca/obj/Debug/net8.0/LaFototeca.csproj.AssemblyReference.cache
+/var/www/html/fototeca/LaFototeca/bin/Debug/net8.0/NetTopologySuite.dll
+/var/www/html/fototeca/LaFototeca/bin/Debug/net8.0/NetTopologySuite.Features.dll
+/var/www/html/fototeca/LaFototeca/bin/Debug/net8.0/NetTopologySuite.IO.ShapeFile.dll
+/var/www/html/fototeca/LaFototeca/obj/Debug/net8.0/LaFototeca.csproj.Up2Date
+/var/www/html/fototeca/LaFototeca/bin/Debug/net8.0/Radzen.Blazor.dll

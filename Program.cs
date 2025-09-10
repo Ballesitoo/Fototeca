@@ -1,4 +1,6 @@
 using LaFototeca.Components;
+using LaFototeca.Entidades;
+using Radzen;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +11,11 @@ builder.Services.AddRazorComponents()
 // Te da opciones avanzadas en los detalles de errores
 builder.Services.AddServerSideBlazor()
     .AddCircuitOptions(options => { options.DetailedErrors = true; });
+
+builder.Services.AddRadzenComponents();
+
+builder.Services.AddScoped<AlertService>();
+builder.Services.AddScoped<ShapefileService>();
 
 var app = builder.Build();
 

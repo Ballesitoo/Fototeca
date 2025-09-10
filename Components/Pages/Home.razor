@@ -2,6 +2,22 @@
 
 @using Microsoft.AspNetCore.Components.Web
 
+@using System;
+@using System.IO;
+@using System.Net.Http;
+@using System.Net.Http.Headers;
+@using System.Text;
+@using System.Threading.Tasks;
+@using System.IO.Compression;
+@using LaFototeca.Entidades
+@inject AlertService alertService
+@inject ShapefileService shapefileService
+
+@using System.Diagnostics;
+@using System.Text.Json;
+
+@inject NavigationManager Navigation
+
 @inject IJSRuntime JS
 
 <PageTitle>Fototeca</PageTitle>
@@ -91,9 +107,9 @@
 </div>
 
 @code {
+    //await alertService.ShowAlert($"Coso.", "Cosito");
 
     private bool showSidePanel = false;
-
     List<Vuelo>? vuelosDelAñoActual;
     int? añoSeleccionado;
 
@@ -107,57 +123,27 @@
 
     public async Task SeleccionarVuelo(Vuelo vuelo)
     {
+        fotogramas = new List<Fotograma>();
+
         vuelosDelAñoActual = null;
         añoSeleccionado = null;
-        Console.WriteLine($"Vuelo seleccionado: {vuelo.Nombre}");
+        //Console.WriteLine($"Vuelo seleccionado: {vuelo.Nombre}");
 
         nombre_vuelo = vuelo.Nombre;
 
-        fotogramas = new List<Fotograma>();
-
         //  Aqui lo suyo ahora (TENIENDO EN CUENTA QUE DE FORMA DEFAULT NO ENSEÑE NINGUN VUELO, EN EL SENTIDO DE QUE NO HAYA CENTROIDES NI POLIGONOS) seria mandar desde aqui el nombre del vuelo para que en el js
         //  cambie su layer de centroides, poligonos y mosaico, para asi mostrar el vuelo correspondiente
-        await JS.InvokeVoidAsync("MapaInterop.ClickVueloSeleccionado", vuelo.Nombre);
+        try
+        {
+            await JS.InvokeVoidAsync("MapaInterop.ClickVueloSeleccionado", vuelo.Nombre);
+        }
+        catch(Exception e)
+        {
+            await alertService.ShowAlert($"Error al seleccionar un vuelo: {e.Message}", "Error en seleccion de vuelo");
+        }
     }
 
-    Dictionary<int, List<Vuelo>> vuelosPorAnio = new()
-    {
-        { 1984, new List<Vuelo> 
-            { 
-                new Vuelo 
-                { 
-                    Id="V2", 
-                    Any=1984, 
-                    Nombre="1984_F_E005M", 
-                    Capa_centroides="...", 
-                    Capa_poligonos="...", 
-                    Capa_mosaico="..." 
-                } 
-            } 
-        },
-        { 2012, new List<Vuelo> 
-            { 
-                new Vuelo 
-                { 
-                    Id="V3", 
-                    Any=2012, 
-                    Nombre="2012_F_E001M_Carret_Llucm-Campos", 
-                    Capa_centroides="...", 
-                    Capa_poligonos="...", 
-                    Capa_mosaico="..." 
-                }, new Vuelo 
-                { 
-                    Id="V4", 
-                    Any=2012, 
-                    Nombre="2012_F_E001M", 
-                    Capa_centroides="...", 
-                    Capa_poligonos="...", 
-                    Capa_mosaico="..." 
-                } 
-            } 
-        }
-    };
-
+    Dictionary<int, List<Vuelo>> vuelosPorAnio = new Dictionary<int, List<Vuelo>>();
 
     private void ToggleSidePanel()
     {
@@ -170,16 +156,100 @@
     }
 
     private DotNetObjectReference<Home>? objRef;
-    // private List<FotogramaItem> Fotogramas => MapService.Instance.Fotogramas;
 
     public List<Fotograma> fotogramas = new List<Fotograma>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var client = new HttpClient();
+        var auth = Convert.ToBase64String(Encoding.ASCII.GetBytes("admin:geoserver"));
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", auth);
+        HttpResponseMessage? response = null;
+        var nombresUnicos = new Dictionary<string, string>();
+
+        try
+        {
+            response = await client.GetAsync("http://192.168.1.60:8090/geoserver/rest/workspaces/fototeca/coverages.json");
+        }
+        catch(Exception e)
+        {
+            alertService.ShowAlert($"Error en la peticion para obtener las capas, ponte en contacto con administrador: {e.Message}", "Error en obtencion de capas");
+            Navigation.NavigateTo("/", true);
+        }
+
+        var json = await response.Content.ReadAsStringAsync();
+        var coverages = JsonDocument.Parse(json)
+            .RootElement.GetProperty("coverages")
+            .GetProperty("coverage")
+            .EnumerateArray();
+        
+        foreach (var coverage in coverages)
+        {
+            var fullName = coverage.GetProperty("name").GetString();
+            
+            //var cleanName = fullName.Split(':')[1];
+            //Console.WriteLine($"nombree: {fullName}");
+            int index = fullName.LastIndexOf('_');
+            var nombre = fullName.Substring(0, index);
+
+            try
+            {
+                var responseDetalle = await client.GetAsync($"http://192.168.1.60:8090/geoserver/rest/workspaces/fototeca/coverages/{fullName}.json");
+                var detalleJson = await responseDetalle.Content.ReadAsStringAsync();
+                var detalle = JsonDocument.Parse(detalleJson);
+                var nativeName = detalle.RootElement.GetProperty("coverage").GetProperty("nativeName").GetString();
+
+                if (!nombresUnicos.ContainsKey(nombre))
+                {
+                    nombresUnicos[nombre] = nativeName;
+                }
+            }
+            catch(Exception e)
+            {
+                alertService.ShowAlert($"Error en la peticion para obtener la info detallada de la capa de {nombre}, ponte en contacto con administrador: {e.Message}", "Error en obtencion de capas");
+                Navigation.NavigateTo("/", true);
+            }
+        }
+
+        foreach (var nombreUnico in nombresUnicos)
+        {
+            var nombre = nombreUnico.Key;        // Nombre de la capa
+            var nativeName = nombreUnico.Value;  // NativeName (como el id)
+
+            // Sacar el año de los primeros 4 caracteres
+            if (!int.TryParse(nombre.Substring(0, 4), out int any)) 
+                continue; // Si no se puede, saltar
+
+            var vuelo = new Vuelo
+            {
+                NativeName = nativeName,
+                Any = any,
+                Nombre = nombre
+            };
+
+            if (!vuelosPorAnio.ContainsKey(any))
+                vuelosPorAnio[any] = new List<Vuelo>();
+
+            // Evitar duplicados si quieres
+            if (!vuelosPorAnio[any].Any(v => v.Nombre == nombre))
+                vuelosPorAnio[any].Add(vuelo);
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            objRef = DotNetObjectReference.Create(this);
-            await JS.InvokeVoidAsync("mapApp.initMap", "map", objRef);
+            try
+            {
+                objRef = DotNetObjectReference.Create(this);
+                await JS.InvokeVoidAsync("mapApp.initMap", "map", objRef);
+            }
+            catch(Exception e)
+            {
+                alertService.ShowAlert($"Error en la inicializacion del mapa base o en la obtencion de la foto, ponte en contacto con administrador: {e.Message}", "Error en obtencion de capas");
+                Navigation.NavigateTo("/", true);
+            }
         }
     }
 
@@ -200,7 +270,6 @@
         //Console.WriteLine("Evento click llegado al blazor");
         //Console.WriteLine($"ID click: {id}");
         //Console.WriteLine($"Location click: {location}");
-
 
         if (!fotogramas.Any(img => img.Id == id))
         {
@@ -240,11 +309,19 @@
 */
     private async Task ToggleVisibility(Fotograma fotograma)
     {
-        fotograma.Visible = !fotograma.Visible;
         // Puedes llamar a JS: JS.InvokeVoidAsync("mapApp.toggleVisibility", fotograma.Nombre);
-        Console.WriteLine($"Toggle {fotograma.Location}");
+        //Console.WriteLine($"Toggle {fotograma.Location}");
 
-        await JS.InvokeVoidAsync("MapaInterop.toggleLayerVisibility", fotograma.Location);
+        try
+        {
+            fotograma.Visible = !fotograma.Visible;
+            await JS.InvokeVoidAsync("MapaInterop.toggleLayerVisibility", fotograma.Location);
+        }
+        catch(Exception e)
+        {
+            await alertService.ShowAlert($"Error al querer cambiar la visibilidad de {fotograma.Location}: {e.Message}", "Error en cambiar visibilidad");
+            //Navigation.NavigateTo("/", true);
+        }
     }
 
     private async Task ZoomToImage(Fotograma fotograma)
@@ -252,7 +329,15 @@
         // Puedes llamar a JS: JS.InvokeVoidAsync("mapApp.zoomTo", fotograma.Nombre);
         //Console.WriteLine($"Zoom to {fotograma.Location}");
 
-        await JS.InvokeVoidAsync("MapaInterop.ZoomToImage", fotograma.Id);
+        try
+        {
+            await JS.InvokeVoidAsync("MapaInterop.ZoomToImage", fotograma.Id);
+        }
+        catch(Exception e)
+        {
+            await alertService.ShowAlert($"Error al querer hacer zoom a {fotograma.Location}: {e.Message}", "Error en hacer zoom");
+            //Navigation.NavigateTo("/", true);
+        }
     }
 
     private async Task DeleteFotograma(Fotograma fotograma)
@@ -260,9 +345,16 @@
         // MapService.Instance.DeleteFotograma(fotograma);
         //Console.WriteLine($"Delete {fotograma.Location}");
 
-        fotogramas.Remove(fotograma);
-
-        await JS.InvokeVoidAsync("MapaInterop.DeleteFotograma", fotograma.Location, fotograma.Id);
+        try
+        {
+            fotogramas.Remove(fotograma);
+            await JS.InvokeVoidAsync("MapaInterop.DeleteFotograma", fotograma.Location, fotograma.Id);
+        }
+        catch(Exception e)
+        {
+            await alertService.ShowAlert($"Error al querer eliminar el fotograma {fotograma.Location}: {e.Message}", "Error en eliminar el fotograma");
+            //Navigation.NavigateTo("/", true);
+        }
     }
 
     private void ToggleSelectAll(ChangeEventArgs e)
@@ -287,7 +379,44 @@
             return;
         }
 
-        await JS.InvokeVoidAsync("MapaInterop.DescargarFotogramas", locations, nombre_vuelo);
+        string? nombreX = locations.FirstOrDefault();
+        string? carpetaRelativa = BuscarCarpeta(nombreX);
+
+
+        /*Console.WriteLine($"El primero de locations: {nombreX}");
+        Console.WriteLine($"Nombre carpeta: {nombre_vuelo}");
+        Console.WriteLine($"Carpeta relativa: {carpetaRelativa}");*/
+
+        /*var vuelo = vuelosPorAnio.Values.SelectMany(v => v).FirstOrDefault(v => v.Nombre == nombre_vuelo);
+        string? nativeNamee = vuelo?.NativeName;
+        Console.WriteLine(nativeNamee);*/
+        try
+        {
+            await JS.InvokeVoidAsync("MapaInterop.DescargarFotogramas", locations, carpetaRelativa);
+        }
+        catch(Exception e)
+        {
+            await alertService.ShowAlert($"Error al descargar el zip con los fotogramas: {e.Message}", "Error en descargar fotogramas");
+            //Navigation.NavigateTo("/", true);
+        }
+    }
+
+    public string? BuscarCarpeta(string nombreArchivo)
+    {
+        string baseDir = "/var/www/html/fototeca/images";
+        string baseUrl = "http://192.168.1.60:8081/fototeca/images";
+
+        foreach (var archivo in Directory.EnumerateFiles(baseDir, "*", SearchOption.AllDirectories))
+        {
+            if (Path.GetFileName(archivo) == nombreArchivo)
+            {
+                // Obtiene la carpeta relativa que contiene el archivo
+                var relativeDir = Path.GetRelativePath(baseDir, Path.GetDirectoryName(archivo)!)
+                          .Replace("\\", "/");
+                return $"{baseUrl}/{relativeDir}";
+            }
+        }
+        return null; // no encontrado
     }
 
     public class Fotograma
@@ -298,13 +427,10 @@
         public bool Seleccionado {get; set;} =  false;
     }
 
-        public class Vuelo
+    public class Vuelo
     {
-        public required string Id { get; set; }
+        public required string NativeName {get; set; }
         public required string Nombre { get; set; }
         public required int Any { get; set; }
-        public required string Capa_centroides { get; set; }
-        public required string Capa_poligonos { get; set; }
-        public required string Capa_mosaico { get; set; }
     }
 }
